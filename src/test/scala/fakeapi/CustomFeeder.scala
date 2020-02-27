@@ -10,44 +10,36 @@ import scala.util.Random
 
 class CustomFeeder extends Simulation {
 
-  val httpConf = http.baseUrl("http://localhost:8080/app/")
+  val httpConf = http.baseUrl("https://fakerestapi.azurewebsites.net/api/")
     .header("Accept", "application/json")
+    .proxy(Proxy("localhost", 8888))
 
-  var idNumbers = (11 to 20).iterator
-  val rnd = new Random()
-  val now = LocalDate.now()
-  val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+  var idNumbers = (1 to 2).iterator
 
-  def getRandomString(length: Int) = {
-    rnd.alphanumeric.filter(_.isLetter).take(length).mkString
-  }
+//  val customFeeder = Iterator.continually(Map(
+//    "ID" -> idNumbers.next(),
+//    "Title" -> ("Game-" + getRandomString(5)),
+//    "Description" -> getRandomDate(now, rnd),
+//    "PageCount" -> rnd.nextInt(100),
+//    "Excerpt" -> ("Category-" + getRandomString(6)),
+//    "PublishDate" -> ("Rating-" + getRandomString(4))
+//  ))
 
-  def getRandomDate(startDate: LocalDate, random: Random): String = {
-    startDate.minusDays(random.nextInt(30)).format(pattern)
-  }
+  val customFeeder = csv("data/BookCsvFile.csv").circular
 
-  val customFeeder = Iterator.continually(Map(
-    "gameId" -> idNumbers.next(),
-    "name" -> ("Game-" + getRandomString(5)),
-    "releaseDate" -> getRandomDate(now, rnd),
-    "reviewScore" -> rnd.nextInt(100),
-    "category" -> ("Category-" + getRandomString(6)),
-    "rating" -> ("Rating-" + getRandomString(4))
-  ))
-
-  def postNewGame() = {
+  def postNewBook() = {
     repeat(5) {
       feed(customFeeder)
         .exec(http("Post New Game")
-          .post("videogames/")
-          .body(ElFileBody("bodies/NewGameTemplate.json")).asJson
+          .post("books/")
+          .body(ElFileBody("bodies/NewBookTemplate.json")).asJson
           .check(status.is(200)))
         .pause(1)
     }
   }
 
-  val scn = scenario("Post new games")
-    .exec(postNewGame())
+  val scn = scenario("Post new books")
+    .exec(postNewBook())
 
   setUp(
     scn.inject(atOnceUsers(1))
