@@ -6,7 +6,7 @@ class CustomFeeder extends Simulation {
 
   val httpConf = http.baseUrl("https://fakerestapi.azurewebsites.net/api/")
     .header("Accept", "application/json")
-    .proxy(Proxy("localhost", 8888))
+   // .proxy(Proxy("localhost", 8888)) // Add this line in when you want to capture traffic via Fiddler
 
   val customFeeder = csv("data/BookCsvFile.csv").circular
 
